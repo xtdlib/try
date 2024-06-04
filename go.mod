@@ -1,3 +1,3 @@
-module github.com/dsnet/try
+module github.com/xtdlib/try
 
 go 1.18
