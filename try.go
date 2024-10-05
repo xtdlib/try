@@ -70,7 +70,7 @@
 //		return nil
 //	}
 //
-// Quick tour of the API
+// # Quick tour of the API
 //
 // The E family of functions all remove a final error return, panicking if non-nil.
 //
@@ -125,8 +125,10 @@
 package try
 
 import (
+	"log"
 	"runtime"
 	"strconv"
+	"testing"
 )
 
 // wrapError wraps an error to ensure that we only recover from errors
@@ -168,13 +170,13 @@ func r(recovered any, fn func(wrapError)) {
 
 // Recover recovers an error previously panicked with an E function.
 // If it recovers an error, it calls fn with the error and the runtime frame in which it occurred.
-func Recover(fn func(err error, frame runtime.Frame)) {
-	r(recover(), func(w wrapError) {
-		frames := runtime.CallersFrames(w.pc[:])
-		frame, _ := frames.Next()
-		fn(w.error, frame)
-	})
-}
+// func Recover(fn func(err error, frame runtime.Frame)) {
+// 	r(recover(), func(w wrapError) {
+// 		frames := runtime.CallersFrames(w.pc[:])
+// 		frame, _ := frames.Next()
+// 		fn(w.error, frame)
+// 	})
+// }
 
 // Handle recovers an error previously panicked with an E function and stores it into errptr.
 func Handle(errptr *error) {
@@ -195,8 +197,20 @@ func HandleF(errptr *error, fn func()) {
 // F recovers an error previously panicked with an E function, wraps it, and passes it to fn.
 // The wrapping includes the file and line of the runtime frame in which it occurred.
 // F pairs well with testing.TB.Fatal and log.Fatal.
-func F(fn func(...any)) {
+func _F(fn func(...any)) {
 	r(recover(), func(w wrapError) { f(fn, w) })
+}
+
+func LogFatal(t *testing.T) {
+	_F(log.Fatal)
+}
+
+func TestFatal(t *testing.T) {
+	_F(t.Fatal)
+}
+
+func TestError(t *testing.T) {
+	_F(t.Error)
 }
 
 func e(err error) {
@@ -247,6 +261,15 @@ func E4[A, B, C, D any](a A, b B, c C, d D, err error) (A, B, C, D) {
 		e(err)
 	}
 	return a, b, c, d
+}
+
+// E5 returns a, b, c, and d as is.
+// It panics if err is non-nil.
+func E5[A, B, C, D, E any](a A, b B, c C, d D, ee E, err error) (A, B, C, D, E) {
+	if err != nil {
+		e(err)
+	}
+	return a, b, c, d, ee
 }
 
 // f simply calls fn with w.
