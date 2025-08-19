@@ -1,7 +1,7 @@
 # Try: Simplified Error Handling in Go
 
 [![GoDev](https://img.shields.io/static/v1?label=godev&message=reference&color=00add8)][godev]
-[![Build Status](https://github.com/dsnet/try/actions/workflows/test.yml/badge.svg?branch=master)][actions]
+[![Build Status](https://github.com/xtdlib/try/actions/workflows/test.yml/badge.svg?branch=master)][actions]
 
 This module reduces the syntactic cost of error handling in Go.
 
@@ -80,13 +80,13 @@ func (a *MixedArray) UnmarshalNext(uo json.UnmarshalOptions, d *json.Decoder) (e
 
 See the [documentation][godev] for more information.
 
-[godev]: https://pkg.go.dev/github.com/dsnet/try
-[actions]: https://github.com/dsnet/try/actions
+[godev]: https://pkg.go.dev/github.com/xtdlib/try
+[actions]: https://github.com/xtdlib/try/actions
 
 ## Install
 
 ```
-go get -u github.com/dsnet/try
+go get -u github.com/xtdlib/try
 ```
 
 ## Semgrep rules
@@ -144,4 +144,4 @@ rules:
 
 BSD - See [LICENSE][license] file
 
-[license]: https://github.com/dsnet/try/blob/master/LICENSE.md
+[license]: https://github.com/xtdlib/try/blob/master/LICENSE.md
