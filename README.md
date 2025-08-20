@@ -64,7 +64,7 @@ Code after `try`:
 
 ```go
 func (a *MixedArray) UnmarshalNext(uo json.UnmarshalOptions, d *json.Decoder) (err error) {
-    defer try.Handle(&err)
+    defer try.Catch(&err)
     if t := try.E1(d.ReadToken()); t.Kind() != '[' {
         return fmt.Errorf("found %v, expecting array start", t.Kind())
     }
@@ -99,12 +99,12 @@ rules:
     patterns:
       - pattern-either:
           - pattern: try.F(...)
-          - pattern: try.Handle(...)
-          - pattern: try.HandleF(...)
+          - pattern: try.Catch(...)
+          - pattern: try.CatchF(...)
           - pattern: try.Recover(...)
       - pattern-not: defer try.F(...)
-      - pattern-not: defer try.Handle(...)
-      - pattern-not: defer try.HandleF(...)
+      - pattern-not: defer try.Catch(...)
+      - pattern-not: defer try.CatchF(...)
       - pattern-not: defer try.Recover(...)
     message: Calls to try handlers must be deferred
     severity: ERROR
@@ -124,11 +124,11 @@ rules:
           ...
       - pattern-not-inside: |
           ...
-          defer try.Handle(...)
+          defer try.Catch(...)
           ...
       - pattern-not-inside: |
           ...
-          defer try.HandleF(...)
+          defer try.CatchF(...)
           ...
       - pattern-not-inside: |
           ...
