@@ -8,7 +8,6 @@ import (
 	"errors"
 	"io"
 	"log"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -41,7 +40,7 @@ func Test(t *testing.T) {
 	}, {
 		name: "Recover/Success",
 		run: func(t *testing.T) (err error) {
-			defer try.Handle(&err)
+			defer try.Catch(&err)
 			a, b, c := try.E3(success())
 			if a != 1 && b != "success" && c != true {
 				t.Errorf("success() = (%v, %v, %v), want (1, success, true)", a, b, c)
@@ -51,7 +50,7 @@ func Test(t *testing.T) {
 	}, {
 		name: "Recover/Failure",
 		run: func(t *testing.T) (err error) {
-			defer try.Handle(&err)
+			defer try.Catch(&err)
 			a, b, c := try.E3(failure())
 			t.Errorf("failure() = (%v, %v, %v), want panic", a, b, c)
 			return nil
@@ -60,7 +59,7 @@ func Test(t *testing.T) {
 	}, {
 		name: "Recover/Failure/Ignored",
 		run: func(t *testing.T) (err error) {
-			defer try.HandleF(&err, func() {
+			defer try.CatchF(&err, func() {
 				if err == io.EOF {
 					err = nil
 				}
@@ -72,7 +71,7 @@ func Test(t *testing.T) {
 	}, {
 		name: "Recover/Failure/Replaced",
 		run: func(t *testing.T) (err error) {
-			defer try.HandleF(&err, func() {
+			defer try.CatchF(&err, func() {
 				if err == io.EOF {
 					err = io.ErrUnexpectedEOF
 				}
@@ -111,32 +110,32 @@ func Test(t *testing.T) {
 	}
 }
 
-func TestFrame(t *testing.T) {
-	t.Run("E", func(t *testing.T) {
-		defer try.Recover(func(err error, frame runtime.Frame) {
-			if frame.File != "x.go" {
-				t.Errorf("want File=x.go, got %q", frame.File)
-			}
-			if frame.Line != 4 {
-				t.Errorf("want Line=4, got %d", frame.Line)
-			}
-		})
-//line x.go:4
-		try.E(errors.New("crash and burn"))
-	})
-	t.Run("E3", func(t *testing.T) {
-		defer try.Recover(func(err error, frame runtime.Frame) {
-			if frame.File != "x.go" {
-				t.Errorf("want File=x.go, got %q", frame.File)
-			}
-			if frame.Line != 4 {
-				t.Errorf("want Line=4, got %d", frame.Line)
-			}
-		})
-//line x.go:4
-		try.E3(failure())
-	})
-}
+// func TestFrame(t *testing.T) {
+// 	t.Run("E", func(t *testing.T) {
+// 		defer try.Recover(func(err error, frame runtime.Frame) {
+// 			if frame.File != "x.go" {
+// 				t.Errorf("want File=x.go, got %q", frame.File)
+// 			}
+// 			if frame.Line != 4 {
+// 				t.Errorf("want Line=4, got %d", frame.Line)
+// 			}
+// 		})
+// //line x.go:4
+// 		try.E(errors.New("crash and burn"))
+// 	})
+// 	t.Run("E3", func(t *testing.T) {
+// 		defer try.Recover(func(err error, frame runtime.Frame) {
+// 			if frame.File != "x.go" {
+// 				t.Errorf("want File=x.go, got %q", frame.File)
+// 			}
+// 			if frame.Line != 4 {
+// 				t.Errorf("want Line=4, got %d", frame.Line)
+// 			}
+// 		})
+// //line x.go:4
+// 		try.E3(failure())
+// 	})
+// }
 
 func TestF(t *testing.T) {
 	buf := new(strings.Builder)
@@ -154,7 +153,7 @@ func TestF(t *testing.T) {
 
 func TestHandleOverwrite(t *testing.T) {
 	err := func() (err error) {
-		try.Handle(&err)
+		try.Catch(&err)
 		return io.EOF
 	}()
 	if err != io.EOF {
@@ -180,7 +179,7 @@ func BenchmarkDefer(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		func() (err error) {
-			defer try.Handle(&err)
+			defer try.Catch(&err)
 			return nil
 		}()
 	}
@@ -198,7 +197,7 @@ func BenchmarkFailure(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		func() (err error) {
-			defer try.Handle(&err)
+			defer try.Catch(&err)
 			sink.A, sink.B, sink.C = try.E3(failure())
 			return nil
 		}()

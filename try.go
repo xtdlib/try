@@ -70,7 +70,7 @@
 //		return nil
 //	}
 //
-// Quick tour of the API
+// # Quick tour of the API
 //
 // The E family of functions all remove a final error return, panicking if non-nil.
 //
@@ -125,8 +125,11 @@
 package try
 
 import (
+	"context"
 	"runtime"
 	"strconv"
+
+	"log/slog"
 )
 
 // wrapError wraps an error to ensure that we only recover from errors
@@ -134,6 +137,10 @@ import (
 type wrapError struct {
 	error
 	pc [1]uintptr
+}
+
+func (e wrapError) Catch() error {
+	return e.error
 }
 
 func (e wrapError) Error() string {
@@ -160,6 +167,7 @@ func r(recovered any, fn func(wrapError)) {
 	switch ex := recovered.(type) {
 	case nil:
 	case wrapError:
+		slog.Default().Log(context.Background(), slog.LevelDebug, "try: catched", slog.String("error", ex.Error()))
 		fn(ex)
 	default:
 		panic(ex)
@@ -168,28 +176,47 @@ func r(recovered any, fn func(wrapError)) {
 
 // Recover recovers an error previously panicked with an E function.
 // If it recovers an error, it calls fn with the error and the runtime frame in which it occurred.
-func Recover(fn func(err error, frame runtime.Frame)) {
-	r(recover(), func(w wrapError) {
-		frames := runtime.CallersFrames(w.pc[:])
-		frame, _ := frames.Next()
-		fn(w.error, frame)
-	})
-}
+// func Recover(fn func(err error, frame runtime.Frame)) {
+// 	r(recover(), func(w WrapError) {
+// 		frames := runtime.CallersFrames(w.pc[:])
+// 		frame, _ := frames.Next()
+// 		fn(w.error, frame)
+// 	})
+// }
 
-// Handle recovers an error previously panicked with an E function and stores it into errptr.
-func Handle(errptr *error) {
-	r(recover(), func(w wrapError) { *errptr = w.error })
-}
-
-// HandleF recovers an error previously panicked with an E function and stores it into errptr.
-// If it recovers an error, it calls fn.
-func HandleF(errptr *error, fn func()) {
+// Catch recovers an error previously panicked with an E function and stores it into errptr.
+func Catch[T error](errptr *T) {
+	// 	r(recover(), func(w WrapError) { *errptr = w.error })
 	r(recover(), func(w wrapError) {
-		*errptr = w.error
-		if w.error != nil {
-			fn()
+		if e, ok := w.error.(T); ok {
+			*errptr = e
+		} else {
+			panic("try: caught error of wrong type: " + w.error.Error())
 		}
 	})
+}
+
+// CatchF recovers an error previously panicked with an E function and stores it into errptr.
+// If it recovers an error, it calls fn.
+func CatchF[T error](errptr *T, fn func()) {
+	// r(recover(), func(w WrapError) {
+	// 	*errptr = w.error
+	// 	if w.error != nil {
+	// 		fn()
+	// 	}
+	// })
+
+	r(recover(), func(w wrapError) {
+		if _, ok := w.error.(T); ok {
+			*errptr = w.error.(T)
+			if w.error != nil {
+				fn()
+			}
+		} else {
+			panic("try: caught error of wrong type: " + w.error.Error())
+		}
+	})
+
 }
 
 // F recovers an error previously panicked with an E function, wraps it, and passes it to fn.
@@ -257,4 +284,74 @@ func E4[A, B, C, D any](a A, b B, c C, d D, err error) (A, B, C, D) {
 func f(fn func(...any), w wrapError) {
 //line try.go:1
 	fn(w)
+}
+
+// L logs error if err is non-nil.
+func L(err error) {
+	if err != nil {
+		slog.Default().Log(context.Background(), slog.LevelError, err.Error())
+	}
+}
+
+func L1[A any](a A, err error) A {
+	if err != nil {
+		slog.Default().Log(context.Background(), slog.LevelError, err.Error())
+	}
+	return a
+}
+
+func L2[A, B any](a A, b B, err error) (A, B) {
+	if err != nil {
+		slog.Default().Log(context.Background(), slog.LevelError, err.Error())
+	}
+	return a, b
+}
+
+func L3[A, B, C any](a A, b B, c C, err error) (A, B, C) {
+	if err != nil {
+		slog.Default().Log(context.Background(), slog.LevelError, err.Error())
+	}
+	return a, b, c
+}
+
+func L4[A, B, C, D any](a A, b B, c C, d D, err error) (A, B, C, D) {
+	if err != nil {
+		slog.Default().Log(context.Background(), slog.LevelError, err.Error())
+	}
+	return a, b, c, d
+}
+
+// M panics if err is non-nil.
+func M(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func M1[A any](a A, err error) A {
+	if err != nil {
+		panic(err)
+	}
+	return a
+}
+
+func M2[A, B any](a A, b B, err error) (A, B) {
+	if err != nil {
+		panic(err)
+	}
+	return a, b
+}
+
+func M3[A, B, C any](a A, b B, c C, err error) (A, B, C) {
+	if err != nil {
+		panic(err)
+	}
+	return a, b, c
+}
+
+func M4[A, B, C, D any](a A, b B, c C, d D, err error) (A, B, C, D) {
+	if err != nil {
+		panic(err)
+	}
+	return a, b, c, d
 }
