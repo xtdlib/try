@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+
+	"log/slog"
 
 	"github.com/xtdlib/try"
 )
@@ -12,10 +15,14 @@ type Catchable interface {
 }
 
 func main() {
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	})))
 	log.Println("start")
 	err := failfunc()
 	if err != nil {
-		log.Printf("caught error: %v", err)
+		log.Print(err)
+		log.Print(err == Err1)
 	}
 	log.Println("done")
 }
@@ -33,6 +40,8 @@ func fpanic() {
 	return
 }
 
+var Err1 = fmt.Errorf("Err1")
+
 func err1() (err error) {
-	return fmt.Errorf("err1: error")
+	return Err1
 }

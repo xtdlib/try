@@ -167,7 +167,7 @@ func r(recovered any, fn func(wrapError)) {
 	switch ex := recovered.(type) {
 	case nil:
 	case wrapError:
-		slog.Default().Log(context.Background(), slog.LevelDebug, "try: catched", slog.String("error", ex.Error()))
+		slog.Default().Debug("try: caught: " + ex.Error())
 		fn(ex)
 	default:
 		panic(ex)
