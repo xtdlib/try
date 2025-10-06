@@ -126,6 +126,7 @@ package try
 
 import (
 	"context"
+	"fmt"
 	"runtime"
 	"strconv"
 
@@ -354,4 +355,30 @@ func M4[A, B, C, D any](a A, b B, c C, d D, err error) (A, B, C, D) {
 		panic(err)
 	}
 	return a, b, c, d
+}
+
+func Equal[T comparable](a, b T) {
+	if a != b {
+		e(fmt.Errorf("try: not equal: %+v != %+v", a, b))
+	}
+}
+
+func NotEqual[T comparable](a, b T) {
+	if a == b {
+		e(fmt.Errorf("try: equal: %+v == %+v", a, b))
+	}
+}
+
+func Zero[T comparable](a T) {
+	var b T
+	if a != b {
+		e(fmt.Errorf("try: zero: %+v == %+v", a, b))
+	}
+}
+
+func NotZero[T comparable](a T) {
+	var b T
+	if a == b {
+		e(fmt.Errorf("try: zero: %+v == %+v", a, b))
+	}
 }
